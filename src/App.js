@@ -1,23 +1,38 @@
-import logo from './logo.svg';
-import './App.css';
+import AddTodo from './components/AddTodo';
+import Todo from './components/Todo';
+import { ALL_TODOS, DELETE_TODO, UPDATE_TODO } from './apollo/gql';
+import { useMutation, useQuery } from '@apollo/client';
+import TotalCount from './components/TotalCount';
 
 function App() {
+  const { loading, error, data } = useQuery(ALL_TODOS);
+  const [toggleTodo, { error: updatedError }] = useMutation(UPDATE_TODO);
+  const [deleteTodo, { error: deleteError }] = useMutation(DELETE_TODO, {
+    update(cache, { data: { removeTodo } }) {
+      const { todos } = cache.readQuery({ query: ALL_TODOS });
+      cache.writeQuery({
+        query: ALL_TODOS,
+        data: {
+          todos: todos.filter((todo) => todo.id !== removeTodo.id),
+        },
+      });
+    },
+  });
+  if (loading) {
+    return <h2>Loading...</h2>;
+  }
+  if (error || updatedError || deleteError) {
+    return <h2>Error...</h2>;
+  }
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <AddTodo />
+      <ul>
+        {data?.todos.map((todo) => (
+          <Todo {...todo} key={todo.id} onToggle={toggleTodo} onDelete={deleteTodo} />
+        ))}
+      </ul>
+      <TotalCount />
     </div>
   );
 }
