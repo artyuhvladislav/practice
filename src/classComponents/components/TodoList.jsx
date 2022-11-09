@@ -14,7 +14,7 @@ export default class TodoList extends Component {
               return <h2>Error...</h2>;
             }
             if (this.loading) {
-              return <h2>Loading...</h2>;
+              return <h2>Loading..</h2>;
             }
             return data.todos.map((todo) => <Todo key={todo.id} {...todo} />);
           }}
